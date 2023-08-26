@@ -1,0 +1,141 @@
+namespace Application
+{
+    public static class SudokuSolver
+    {
+        public static bool SolveSudoku(byte[,] sudokuGrid, out byte[,] solvedSudokuGrid)
+        {
+            //Check if the sudokuGrid is a valid input
+            if (!IsValid9x9Sudoku(sudokuGrid))
+                throw new ArgumentException("Sudoku grid must be 9x9 and must only contain numbers 1-9 and 0");
+
+            //flatten sudoku for more performance in the RecursiveSolve-function
+            byte[] flattenGrid = FlattenSudoku(sudokuGrid);
+
+            //solve sudoku & see if it is solveable
+            bool solveable = RecursiveSolve(flattenGrid);
+
+            //unflatten grid if the sudoku was solveable
+            //assign 0 if the sudoku was not solveable
+            if (solveable)
+                solvedSudokuGrid = UnflattenSudoku(flattenGrid);
+            else
+                solvedSudokuGrid = new byte[9,9];
+
+            //return if the sudoku was solveable
+            return solveable;
+        }
+
+        private static bool RecursiveSolve(byte[] flattenGrid)
+        {
+            //find the first empty cell
+            int emptyCellIndex = FindEmptyCell(flattenGrid);
+
+            //if no empty cell is found, the sudoku was solveable and a solution has been found
+            if (emptyCellIndex == -1) { return true; }
+
+            //calculate x- and y-index of the cell
+            int emptyCellX = emptyCellIndex % 9;
+            int emptyCellY = emptyCellIndex / 9;
+
+            //try each number for the empty cell
+            for (byte nr = 1; nr <= 9; nr++)
+            {
+                if (IsValidNumber(flattenGrid, emptyCellY, emptyCellX, nr))
+                {
+                    //try number for the cell
+                    flattenGrid[emptyCellIndex] = nr;
+
+                    //if the sudoku is solveable with this number in this cell, return true
+                    if (RecursiveSolve(flattenGrid))
+                        return true;
+
+                    //if the sudoku is not solveable with this number in this cell, reset the used number
+                    flattenGrid[emptyCellIndex] = 0;
+                }
+            }
+            //return false if no number is valid
+            return false;
+        }
+
+        private static int FindEmptyCell(byte[] flattenGrid)
+        {
+            //return -1 if no empty cell was found
+            int emptyCellIndex = -1;
+
+            //check for every cell, if it is empty
+            for (int i = 0; i < 81; i++)
+            {
+                if (flattenGrid[i] == 0)
+                    emptyCellIndex = i;
+            }
+
+            return emptyCellIndex;
+        }
+
+        private static bool IsValidNumber(byte[] flattedBoard, int posX, int posY, byte nr)
+        {
+            //check rows and columns for duplicates
+            for (int i = 0; i < 9; i++)
+            {
+                if (flattedBoard[posY + i * 9] == nr && i != posX || 
+                    flattedBoard[i + posX * 9] == nr && i != posY)
+                {
+                    return false;
+                }
+            }
+
+            //check grid for duplicates
+            int partGridStartX = SubgridStart(posY);
+            int partGridStartY = SubgridStart(posX);
+            for (int x = partGridStartX; x < partGridStartX + 3; x++)
+                for (int y = partGridStartY; y < partGridStartY + 3; y++)
+                    if (flattedBoard[x + y * 9] == nr && x != posY && y != posX)
+                        return false;
+
+            //no duplicates found, number may be valid at this spot
+            return true;
+        }
+
+        private static int SubgridStart(int index)
+        {
+            if (index <= 2) return 0;
+            if (index <= 5) return 3;
+            return 6;
+        }
+
+        private static byte[] FlattenSudoku(byte[,] sudokuGrid)
+        {
+            byte[] flattenGrid = new byte[81];
+            for (int y = 0; y < 9; y++)
+                for (int x = 0; x < 9; x++)
+                    flattenGrid[y * 9 + x] = sudokuGrid[x, y];
+            return flattenGrid;
+        } 
+
+        private static byte[,] UnflattenSudoku(byte[] flattenGrid)
+        {
+            byte[,] unflattenGrid = new byte[9, 9];
+            for (int x = 0; x < 9; x++)
+                for (int y = 0; y < 9; y++)
+                    unflattenGrid[x, y] = flattenGrid[y * 9 + x];
+
+            return unflattenGrid;
+        }
+
+        private static bool IsValid9x9Sudoku(byte[,] sudokuGrid)
+        {
+            //check dimensions
+            if (sudokuGrid.GetLength(0) != 9 || sudokuGrid.GetLength(1) != 9)
+                return false;
+
+            //check if there is any other number than 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+            for (int x = 0; x < 9; x++)
+                for (int y = 0; y < 9; y++)
+                    if (sudokuGrid[x, y] > 9)
+                        return false;
+
+            //is valid
+            return true;
+        }
+    }
+}
