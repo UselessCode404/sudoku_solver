@@ -1,4 +1,3 @@
 # sudoku_solver
-C# code, solves a 9x9 sudoku grid (brute force algorithm). This code
-will always find a solution and is pretty efficient.
-Review the code, everything has a comment //comment
+C# code, solves a 9x9 sudoku grid with a backtracking algorithm
+This program will always find a solution if one exists or otherwise return null
