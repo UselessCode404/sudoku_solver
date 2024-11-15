@@ -11,17 +11,14 @@ namespace Application
             //flatten sudoku for more performance in the RecursiveSolve-function
             byte[] flattenGrid = FlattenSudoku(sudokuGrid);
 
-            //solve sudoku & see if it is solveable
+            //solve sudoku / check if it is solveable
             bool solveable = RecursiveSolve(flattenGrid);
 
             //unflatten grid if the sudoku was solveable
-            //assign 0 if the sudoku was not solveable
-            if (solveable)
-                solvedSudokuGrid = UnflattenSudoku(flattenGrid);
-            else
-                solvedSudokuGrid = new byte[9,9];
+            //assign null if the sudoku was not solveable
+            solvedSudokuGrid = solveable ? UnflattenSudoku(flattenGrid) : null;
 
-            //return if the sudoku was solveable
+            //return whether or not the sudoku was solveable
             return solveable;
         }
 
@@ -30,7 +27,7 @@ namespace Application
             //find the first empty cell
             int emptyCellIndex = FindEmptyCell(flattenGrid);
 
-            //if no empty cell is found, the sudoku was solveable and a solution has been found
+            //if no empty cell is found, the sudoku is solveable and a solution has been found
             if (emptyCellIndex == -1) { return true; }
 
             //calculate x- and y-index of the cell
